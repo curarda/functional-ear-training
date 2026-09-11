@@ -5,7 +5,7 @@
    önbelleğe alınıyor; böylece çevrimdışı görünüm çevrimiçiyle birebir aynı.
 
    CACHE adı değişince eski önbellek atılır — sync.py bunu otomatik artırıyor. */
-var CACHE = 'fk-v4';
+var CACHE = 'fk-v6';
 var ASSETS = ['./', './index.html', './manifest.webmanifest',
               './icon-180.png', './icon-192.png', './icon-512.png'];
 
