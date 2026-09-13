@@ -802,11 +802,16 @@ function newQuestion(){
   meter();
   playQ(true);
 }
+/* tonik hem pes hem tiz uçta bir tuş olarak duruyor (0 ve 7) — hangisine
+   basılırsa basılsın aynı derece (tonik), o yüzden ikisi de doğru sayılır. */
 function correctIdx(){
   if(S.q.deg!==0) return [S.q.deg];
-  if(cfg.range==='one') return [S.q.abs===7?7:0];
   return [0,7];
 }
+/* abs değeri 0 veya 7'yle birebir örtüşüyorsa "gerçek" tonik tuşu bellidir
+   (ped. bunun dışındaki tonik oktavlarda — many aralığında -7/14 gibi —
+   iki tuştan hangisinin "asıl" olduğu zaten belirsiz, orada fark gösterilmez) */
+function exactTonicIdx(){ return S.q.abs===7?7:(S.q.abs===0?0:null); }
 function answer(i){
   if(S.answered) return;
   var keys=el('pad').children, ok=correctIdx().indexOf(i)>=0;
@@ -826,7 +831,14 @@ function answer(i){
   var L=labels();
   el('reveal').textContent=L[(cfg.range==='one'&&S.q.abs===7)?7:S.q.deg];
   el('reveal').className='reveal ok';
-  el('caption').innerHTML='<b>'+absName(S.q.abs,prefs.label==='fixed')+'</b> · '+keyName();
+  var octNote='';
+  if(S.q.deg===0){
+    var exact=exactTonicIdx();
+    if(exact!==null && exact!==i) octNote = i===0
+      ? ' <span style="color:var(--ink-3)">— pes uçtan işaretledin, nota tiz oktavdaydı, ikisi de doğru</span>'
+      : ' <span style="color:var(--ink-3)">— tiz uçtan işaretledin, nota pes oktavdaydı, ikisi de doğru</span>';
+  }
+  el('caption').innerHTML='<b>'+absName(S.q.abs,prefs.label==='fixed')+'</b> · '+keyName()+octNote;
   meter();
   var wait=900;
   if(prefs.res) wait=playResolution()*1000+250;
@@ -863,7 +875,7 @@ function startLevel(lv){
   cfg=Object.assign({},lv);
   if(!cfg.mod) cfg.mod='note';
   S={index:0,correct:0,wrong:0,pc:0,tonic:60,sn:cfg.scale==='mix'?'major':cfg.scale,
-     lastAbs:null,lastKey:null,q:null,seq:null,slot:0,step:0,deg:0,dir:null,opts:null,
+     lastAbs:null,lastKey:null,q:null,seq:null,slot:0,found:{},deg:0,dir:null,opts:null,
      wrongThis:false,answered:false,pending:false};
   if(cfg.mod==='chord'){ show('scPlay'); newChordQ(); }
   else if(cfg.mod==='keys'||cfg.mod==='dia'){ show('scTheory'); newTheoryQ(); }
@@ -1096,9 +1108,10 @@ function renderPiano(){
     b.onclick=pianoTap; p.appendChild(b);
   }
   w.appendChild(p);
-  /* zaten bulunmuş dereceleri işaretle — bu fonksiyon her çağrıda aynı sonucu verir */
+  /* zaten bulunmuş sesleri işaretle — S.found bir set (derece -> true), sıra önemsiz */
   var st=SCALES[S.sn].steps;
-  for(i=0;i<S.step;i++){
+  for(i=0;i<7;i++){
+    if(!S.found[i]) continue;
     var k=p.querySelector('[data-pc="'+((S.pc+st[i])%12)+'"]');
     if(k) k.classList.add('ok');
   }
@@ -1108,16 +1121,16 @@ function renderChosen(){
   var w=el('tChosen'); w.hidden=false; w.innerHTML='';
   for(var d=0;d<7;d++){
     var e=document.createElement('i');
-    if(d<S.step){ e.className='ok'; e.textContent=noteNameIn(S.pc,S.sn,d); }
+    if(S.found[d]){ e.className='ok'; e.textContent=noteNameIn(S.pc,S.sn,d); }
     else e.textContent='·';
     w.appendChild(e);
   }
 }
 function newKeyQ(){
   pickTheoryKey();
-  S.step=0; S.wrongThis=false; S.answered=false; S.pending=false;
-  el('tPrompt').innerHTML=keyLabel()+'<em>gamın seslerini pesten tize sırayla seç</em>';
-  el('tCaption').textContent='Tonikten başla';
+  S.found={}; S.wrongThis=false; S.answered=false; S.pending=false;
+  el('tPrompt').innerHTML=keyLabel()+'<em>gamın 7 sesini bul — istediğin sesten başlayabilirsin</em>';
+  el('tCaption').textContent='';
   renderPiano(); renderChosen(); tCtrl();
   head('Tonun sesleri',cfg.rangeName,true); tMeter();
   if(prefs.sound) playScaleTonic(S.tonic,S.sn);
@@ -1125,20 +1138,28 @@ function newKeyQ(){
 function pianoTap(e){
   if(S.answered) return;
   var btn=e.currentTarget, pc=+btn.getAttribute('data-pc');
-  var st=SCALES[S.sn].steps, want=(S.pc+st[S.step])%12;
-  if(pc!==want){
+  var st=SCALES[S.sn].steps, deg=-1, d;
+  for(d=0;d<7;d++){ if((S.pc+st[d])%12===pc){ deg=d; break; } }
+  if(deg<0){
     if(!S.wrongThis){ S.wrongThis=true; S.wrong++; tMeter(); }
     btn.classList.add('no');
     setTimeout(function(){ btn.classList.remove('no'); },420);
-    el('tCaption').textContent='O değil — '+(S.step+1)+'. sesi ara';
+    el('tCaption').textContent='O ses bu tonda yok';
     if(navigator.vibrate) navigator.vibrate(35);
     return;
   }
+  if(S.found[deg]){
+    /* zaten bulunmuş sese tekrar basmak hata sayılmaz, sadece tekrar çalar */
+    if(prefs.sound){ stopAll(); playNote(S.tonic+st[deg],0,.5,.32); }
+    return;
+  }
+  S.found[deg]=true;
   btn.classList.add('ok');
-  if(prefs.sound){ stopAll(); playNote(S.tonic+st[S.step],0,.7,.40); }
-  S.step++; renderChosen();
-  el('tCaption').textContent = S.step<7 ? (S.step+1)+'. ses' : '';
-  if(S.step>=7) finishKeyQ();
+  if(prefs.sound){ stopAll(); playNote(S.tonic+st[deg],0,.7,.40); }
+  renderChosen();
+  var kalan=7-Object.keys(S.found).length;
+  el('tCaption').textContent = kalan>0 ? kalan+' ses kaldı' : '';
+  if(kalan<=0) finishKeyQ();
 }
 function finishKeyQ(){
   S.answered=true;
