@@ -1,57 +1,36 @@
-# Fonksiyonel Kulak — çevrimdışı web sürümü (PWA)
+# Functional Ear Training
 
-Bu klasör GitHub Pages'e konulmak için hazır. Yayınlandıktan sonra iPhone'da
-**Ana Ekrana Ekle** dediğinde gerçek bir uygulama gibi davranır: kendi simgesi,
-tam ekran, **ve internet olmadan da açılır** — servis işçisi her şeyi telefona
-kaydeder.
+A browser-based ear-training app built around Alain Benbassat's functional ear training method. It works offline and can be added to an iPhone home screen like a native app.
 
-Mac gerekmez, Apple hesabı gerekmez, 7 günde bir yenileme yoktur.
+**Live app:** https://curarda.github.io/functional-ear-training/
 
-## Yayınlama (bir kez, ~3 dakika)
+## Who it is for
 
-```bash
-cd web
-git init
-git add -A
-git commit -m "Fonksiyonel Kulak"
-git branch -M main
-git remote add origin https://github.com/<kullanıcı-adın>/kulak.git
-git push -u origin main
-```
+- Singers and instrumentalists who want to hear harmonic function (tonic, subdominant, dominant) instead of memorizing note names.
+- Music theory students following the functional method.
 
-Sonra GitHub'da: depo → **Settings** → **Pages** → *Source: Deploy from a branch* →
-**main** / **/ (root)** → **Save**.
+## Why I built it
 
-Bir iki dakika içinde adresin hazır olur:
+I wanted a free, offline practice tool I could use on my phone anywhere, without an account, ads or internet access.
 
-```
-https://<kullanıcı-adın>.github.io/functional-ear-training/
-```
+## What it does
 
-## iPhone'a kurmak
+- Sets the tonic with a cadence, then plays a note or chord for you to identify by degree.
+- Theory view: shows the notes of the tonic and the diatonic chord sequence, written with the actual note names of the chosen key.
+- Adjustable volume; sound plays on iPhone even with the silent switch on.
+- Works offline through a service worker.
 
-1. Bu adresi **Safari**'de aç (Chrome değil — iOS'ta Ana Ekrana Ekle yalnız Safari'de tam çalışır)
-2. Paylaş düğmesi (↑) → **Ana Ekrana Ekle** → **Ekle**
+## Install on iPhone
 
-Bir kez açtıktan sonra uçak modunda bile çalışır.
+1. Open the live link in **Safari** (Chrome does not support home screen apps on iOS).
+2. Tap Share → **Add to Home Screen**.
 
-## Güncelleme
+## Run locally
 
-Ana klasördeki `fonksiyonel-kulak.html` tek gerçek kaynak. Değiştirdikten sonra:
+Open `index.html` in a browser, or serve the folder with any static file server.
 
-```bash
-python ../sync.py     # buraya kopyalar + sw.js önbellek sürümünü artırır
-git commit -am "guncelleme" && git push
-```
+## Tech
 
-Telefondaki uygulama bir sonraki açılışında kendini günceller (önbellek sürümü
-arttığı için eskisini atar).
+HTML, CSS and JavaScript, Web Audio API, Web App Manifest, service worker.
 
-## Dosyalar
-
-| Dosya | Ne işe yarar |
-|---|---|
-| `index.html` | uygulamanın kendisi, tek dosya |
-| `sw.js` | servis işçisi — çevrimdışı çalışmayı sağlar |
-| `manifest.webmanifest` | uygulama adı, rengi, simgeleri |
-| `icon-180/192/512.png` | ana ekran simgeleri |
+The original Turkish documentation is in [README.tr.md](README.tr.md).
