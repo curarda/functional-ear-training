@@ -25,7 +25,7 @@ Sonra GitHub'da: depo → **Settings** → **Pages** → *Source: Deploy from a 
 Bir iki dakika içinde adresin hazır olur:
 
 ```
-https://<kullanıcı-adın>.github.io/kulak/
+https://<kullanıcı-adın>.github.io/functional-ear-training/
 ```
 
 ## iPhone'a kurmak
